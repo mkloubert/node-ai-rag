@@ -1,0 +1,39 @@
+{
+  "name": "node-ai-rag",
+  "version": "1.0.0",
+  "main": "index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "engineStrict": true,
+  "scripts": {
+    "sandbox": "tsx ./sandbox.mts",
+    "start": "tsx ./index.mts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@dqbd/tiktoken": "1.0.21",
+    "@langchain/community": "0.3.45",
+    "@langchain/core": "0.3.57",
+    "@types/commonmark": "0.27.9",
+    "@types/node": "20.17.57",
+    "@types/yargs": "17.0.33",
+    "commonmark": "0.31.2",
+    "dotenv": "16.5.0",
+    "exceljs": "4.4.0",
+    "fast-glob": "3.3.3",
+    "file-type": "21.0.0",
+    "langchain": "0.3.27",
+    "officeparser": "4.2.0",
+    "open": "10.1.2",
+    "pdf-parse": "1.1.1",
+    "tempfile": "5.0.0",
+    "tesseract.js": "6.0.1",
+    "tsx": "4.19.4",
+    "winston": "3.17.0",
+    "yargs": "18.0.0"
+  }
+}
