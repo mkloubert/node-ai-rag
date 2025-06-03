@@ -1,6 +1,6 @@
 {
   "name": "node-ai-rag",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.js",
   "engines": {
     "node": ">=20"
@@ -10,10 +10,32 @@
     "sandbox": "tsx ./sandbox.mts",
     "start": "tsx ./index.mts"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": [
+    "openai",
+    "ollama",
+    "rag",
+    "cli"
+  ],
+  "author": {
+    "name": "Marcel Joachim Kloubert",
+    "url": "https://marcel.coffee"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mkloubert/node-ai-rag"
+  },
+  "bugs": {
+    "url": "https://github.com/mkloubert/node-ai-rag/issues"
+  },
+  "sponsor": {
+    "url": "http://paypal.me/MarcelKloubert"
+  },
+  "funding": {
+    "type": "paypal",
+    "url": "http://paypal.me/MarcelKloubert"
+  },
+  "license": "MIT",
+  "description": "A command line tool for a local RAG written for Node.js 20+",
   "dependencies": {
     "@dqbd/tiktoken": "1.0.21",
     "@langchain/community": "0.3.45",

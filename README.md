@@ -1,5 +1,7 @@
 # AI RAG CLI for Node.js
 
+> A command line tool for a local RAG written for Node.js 20+
+
 ## Requirements
 
 - [Ollama](https://ollama.com/) with an embedding model like [nomic-embed-text](https://ollama.com/library/nomic-embed-text)
