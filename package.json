@@ -1,6 +1,6 @@
 {
   "name": "node-ai-rag",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "index.js",
   "engines": {
     "node": ">=20"
@@ -28,11 +28,11 @@
     "url": "https://github.com/mkloubert/node-ai-rag/issues"
   },
   "sponsor": {
-    "url": "http://paypal.me/MarcelKloubert"
+    "url": "https://paypal.me/MarcelKloubert"
   },
   "funding": {
     "type": "paypal",
-    "url": "http://paypal.me/MarcelKloubert"
+    "url": "https://paypal.me/MarcelKloubert"
   },
   "license": "MIT",
   "description": "A command line tool for a local RAG written for Node.js 20+",
