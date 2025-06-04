@@ -1,45 +1,38 @@
-# AI RAG CLI for Node.js
+# sv
 
-> A command line tool for a local RAG written for Node.js 20+
+Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
 
-## Requirements
+## Creating a project
 
-- [Ollama](https://ollama.com/) with an embedding model like [nomic-embed-text](https://ollama.com/library/nomic-embed-text)
-
-## Usage
-
-First run
+If you're seeing this, you've probably already done this step. Congrats!
 
 ```bash
-npm install
+# create a new project in the current directory
+npx sv create
+
+# create a new project in my-app
+npx sv create my-app
 ```
 
-from [this directory](./) to install all dependencies.
+## Developing
 
-Then create a [.data folder](./.data) and put all your documents in there. Supported are:
+Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
 
-- `.gif`, `.jp(e)g`, `.png`
-- `.pdf`
-- `.pptx`
-- `.txt`
-- `.xlsx`
+```bash
+npm run dev
 
-All files with leading `.` will be ignored.
+# or start the server and open the app in a new browser tab
+npm run dev -- --open
+```
 
-Optionally you can create an [.env file](./.env) to define things like `OPENAI_API_KEY`.
+## Building
 
-## Flags and options
+To create a production version of your app:
 
-| Name                    | Description                                                                                                                                                                                           | Example / Default            |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| `chunk-size`            | Sets the size for chunks.                                                                                                                                                                             | `--chunk-size=1000`          |
-| `chunk-overlap`         | Sets the size for chunk overlaps.                                                                                                                                                                     | `--chunk-overlap=200`        |
-| `dry-run`               | Flag that indicates NOT to run query to AI provider. Default: `false`.                                                                                                                                | `--dry-run`                  |
-| `lang`                  | Sets the explicit language.                                                                                                                                                                           | `--lang="eng"`               |
-| `log-level`             | The custom [log level](https://www.npmjs.com/package/winston#logging-levels).                                                                                                                         | `--log-level="info"`         |
-| `max-tokens`            | Maximum number of response tokens.                                                                                                                                                                    | `--max-tokens=10000`         |
-| `model`                 | The custom model to use. Default for OpenAI is [gpt-4o-mini](https://openai.com/index/gpt-4o-mini-advancing-cost-efficient-intelligence/) and for Ollama [llama4](https://ollama.com/library/llama4). | `--model="gpt-4o-mini"`      |
-| `number-of-vector-docs` | Number of relevant vector docs to search for.                                                                                                                                                         | `--number-of-vector-docs=10` |
-| `ollama`                | Flag that indicates to use [Ollama API](https://ollama.com/) instead of [OpenAI](https://platform.openai.com/docs/api-reference/chat/create). Default: `false`.                                       | `--ollama`                   |
-| `silent`                | Flag that indicates NOT to log. Default: `false`.                                                                                                                                                     | `--silent`                   |
-| `temperature`           | Temperature value for the AI model.                                                                                                                                                                   | `--temperature=0.3`          |
+```bash
+npm run build
+```
+
+You can preview the production build with `npm run preview`.
+
+> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.

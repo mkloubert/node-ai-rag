@@ -1,61 +1,37 @@
 {
-  "name": "node-ai-rag",
-  "version": "1.0.2",
-  "main": "index.js",
-  "engines": {
-    "node": ">=20"
-  },
-  "engineStrict": true,
-  "scripts": {
-    "sandbox": "tsx ./sandbox.mts",
-    "start": "tsx ./index.mts"
-  },
-  "keywords": [
-    "openai",
-    "ollama",
-    "rag",
-    "cli"
-  ],
-  "author": {
-    "name": "Marcel Joachim Kloubert",
-    "url": "https://marcel.coffee"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/mkloubert/node-ai-rag"
-  },
-  "bugs": {
-    "url": "https://github.com/mkloubert/node-ai-rag/issues"
-  },
-  "sponsor": {
-    "url": "https://paypal.me/MarcelKloubert"
-  },
-  "funding": {
-    "type": "paypal",
-    "url": "https://paypal.me/MarcelKloubert"
-  },
-  "license": "MIT",
-  "description": "A command line tool for a local RAG written for Node.js 20+",
-  "dependencies": {
-    "@dqbd/tiktoken": "1.0.21",
-    "@langchain/community": "0.3.45",
-    "@langchain/core": "0.3.57",
-    "@types/commonmark": "0.27.9",
-    "@types/node": "20.17.57",
-    "@types/yargs": "17.0.33",
-    "commonmark": "0.31.2",
-    "dotenv": "16.5.0",
-    "exceljs": "4.4.0",
-    "fast-glob": "3.3.3",
-    "file-type": "21.0.0",
-    "langchain": "0.3.27",
-    "officeparser": "4.2.0",
-    "open": "10.1.2",
-    "pdf-parse": "1.1.1",
-    "tempfile": "5.0.0",
-    "tesseract.js": "6.0.1",
-    "tsx": "4.19.4",
-    "winston": "3.17.0",
-    "yargs": "18.0.0"
-  }
+	"name": "myapp",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync || echo ''",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"format": "prettier --write .",
+		"lint": "prettier --check . && eslint ."
+	},
+	"devDependencies": {
+		"@eslint/compat": "^1.2.5",
+		"@eslint/js": "^9.18.0",
+		"@sveltejs/adapter-auto": "^6.0.0",
+		"@sveltejs/kit": "^2.16.0",
+		"@sveltejs/vite-plugin-svelte": "^5.0.0",
+		"@tailwindcss/vite": "^4.0.0",
+		"eslint": "^9.18.0",
+		"eslint-config-prettier": "^10.0.1",
+		"eslint-plugin-svelte": "^3.0.0",
+		"globals": "^16.0.0",
+		"prettier": "^3.4.2",
+		"prettier-plugin-svelte": "^3.3.3",
+		"prettier-plugin-tailwindcss": "^0.6.11",
+		"svelte": "^5.0.0",
+		"svelte-check": "^4.0.0",
+		"tailwindcss": "^4.0.0",
+		"typescript": "^5.0.0",
+		"typescript-eslint": "^8.20.0",
+		"vite": "^6.2.6"
+	}
 }
