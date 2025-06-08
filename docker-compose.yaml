@@ -1,0 +1,51 @@
+services:
+  web-app:
+    image: node:22.16.0-alpine3.22
+    container_name: node-app
+    working_dir: /usr/src/app
+    volumes:
+      - ./:/usr/src/app
+    ports:
+      - '5173:5173'
+    command: "sh -c 'npm install && npm run dev -- --host'"
+    depends_on:
+      - chromadb
+    env_file:
+      - .env
+      - .env.local
+    restart: "always"
+
+  chroma-init:
+    image: alpine/curl:8.12.1
+    depends_on:
+      chromadb:
+        condition: service_healthy
+    entrypoint: ['/bin/sh', '-c']
+    command: >
+      "
+      echo 'Wait for Chroma API ...';
+      sleep 3;
+      echo 'Creating initial tenant ...';
+      curl -X POST http://chromadb:8000/api/v2/tenants -H 'Content-Type: application/json' -d '{\"name\": \"default-tenant\"}';
+      echo 'Creating initial database ...';
+      curl -X POST http://chromadb:8000/api/v2/tenants/default-tenant/databases -H 'Content-Type: application/json' -d '{\"name\": \"default-database\"}';
+      echo 'Success!';
+      "
+    restart: 'no'
+
+  chromadb:
+    build:
+      context: .
+      dockerfile: Dockerfile.chromadb
+    container_name: chromadb
+    ports:
+      - '8000:8000'
+    environment:
+      - IS_PERSISTENT=TRUE
+    volumes:
+      - ./.chromadb/data:/data
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/api/v2/healthcheck']
+      interval: 5s
+      timeout: 3s
+      retries: 20
