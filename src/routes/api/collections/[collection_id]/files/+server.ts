@@ -22,6 +22,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import { createHash } from 'node:crypto';
 import { collectionDocumentItemSchema } from '$lib/types';
 import type { RequestHandler } from '@sveltejs/kit';
 import { fileTypeFromBuffer } from 'file-type';
@@ -31,7 +32,8 @@ import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { OllamaEmbeddings } from '$lib/types/classes/ollama-embeddings';
 import { chromaBaseUrl, databaseName, tenantName } from '../../constants';
 import { z } from 'zod';
-import { randomUUID } from 'node:crypto';
+import { createLogger } from '$lib/types/classes/logger';
+import { flattenObj } from '$lib';
 
 const indexFilesSchema = z.object({
 	chunkOverlap: z.number().int().min(0),
@@ -41,11 +43,9 @@ const indexFilesSchema = z.object({
 });
 
 export const POST: RequestHandler = async ({ request }) => {
-	const body = await indexFilesSchema.parseAsync(await request.json());
+	const l = createLogger('POST.create-embedding-vectors');
 
-	const l = (...args: any[]) => {
-		console.log('[/api/collections/[collection_id]/files', ...args);
-	};
+	const body = await indexFilesSchema.parseAsync(await request.json());
 
 	const OLLAMA_BASE_URL =
 		process.env.TGF_OLLAMA_BASE_URL?.trim() || 'http://host.docker.internal:11434';
@@ -53,6 +53,11 @@ export const POST: RequestHandler = async ({ request }) => {
 		process.env.TGF_OLLAMA_EMBEDDING_MODEL?.trim() || 'nomic-embed-text';
 
 	const { chunkOverlap, chunkSize, collectionName, uploads: items } = body;
+
+	l('Chunk size:', chunkSize);
+	l('Chunk overlap:', chunkOverlap);
+	l('Collection:', collectionName);
+	l('Documents:', items.map((i) => i.name).join());
 
 	for (const item of items) {
 		l('Handling uploaded file', item.name, '...');
@@ -68,6 +73,9 @@ export const POST: RequestHandler = async ({ request }) => {
 		const mime = String((await fileTypeFromBuffer(data))?.mime ?? '')
 			.toLowerCase()
 			.trim();
+
+		l('Mime:', mime);
+
 		if (mime.includes('image/')) {
 			l('... as image ...');
 
@@ -81,9 +89,9 @@ export const POST: RequestHandler = async ({ request }) => {
 			allDocuments.push(
 				new Document({
 					pageContent: String(result.data.text ?? '').trim(),
-					metadata: {
+					metadata: flattenObj({
 						...metadata
-					}
+					})
 				})
 			);
 		} else if (mime.includes('/pdf')) {
@@ -96,6 +104,14 @@ export const POST: RequestHandler = async ({ request }) => {
 
 			const docs = await loader.load();
 
+			docs.forEach((doc) => {
+				doc.metadata = flattenObj({
+					...(doc.metadata ?? {}),
+
+					...metadata
+				});
+			});
+
 			allDocuments.push(...docs);
 		} else if (mime.includes('powerpoint') || mime.includes('presentation')) {
 			l('... as PowerPoint ...');
@@ -107,9 +123,9 @@ export const POST: RequestHandler = async ({ request }) => {
 			allDocuments.push(
 				new Document({
 					pageContent,
-					metadata: {
+					metadata: flattenObj({
 						...metadata
-					}
+					})
 				})
 			);
 		} else if (mime.includes('excel') || mime.includes('sheet')) {
@@ -146,11 +162,11 @@ export const POST: RequestHandler = async ({ request }) => {
 				allDocuments.push(
 					new Document({
 						pageContent: rowTexts.join('\n').trim(),
-						metadata: {
+						metadata: flattenObj({
 							...metadata,
 
 							sheet: sheetName
-						}
+						})
 					})
 				);
 			}
@@ -158,15 +174,16 @@ export const POST: RequestHandler = async ({ request }) => {
 			l('... as plain text ...');
 
 			allDocuments.push({
-				metadata: {
+				metadata: flattenObj({
 					...metadata
-				},
+				}),
 				pageContent: data.toString('utf-8')
 			});
 		}
 
 		const allTexts = allDocuments.map((doc) => doc.pageContent);
 		if (allTexts.length === 0) {
+			l.warn('No texts found');
 			continue;
 		}
 
@@ -189,8 +206,11 @@ export const POST: RequestHandler = async ({ request }) => {
 			metadatas: [] as unknown[]
 		};
 
-		for (const { metadata } of chunks) {
-			upsertData.ids.push(randomUUID());
+		for (const { metadata, pageContent } of chunks) {
+			const hash = createHash('sha256').update(Buffer.from(pageContent, 'utf-8')).digest('base64');
+			const id = `${hash}:${pageContent.length}`;
+
+			upsertData.ids.push(id);
 
 			if (metadata) {
 				let locFrom: any;

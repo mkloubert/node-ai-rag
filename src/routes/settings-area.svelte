@@ -63,6 +63,7 @@
 	const selectedChatModelStorageKey = 'tgf-selected-chat-model';
 	const temperatureStorageKey = 'tgf-temperature';
 
+	export let isSubmittingQuestion = false;
 	export let onChatModelChange: (chatModel: string) => void;
 	export let onCollectionsChange: (collections: VectorCollection[]) => void;
 	export let onMaxTokensChange: (maxTokens: number) => void;
@@ -195,25 +196,17 @@
 		isLoadingChatModels = true;
 
 		try {
-			const loadedModels = new Set<string>(['openai:gpt-4o-mini']);
+			const loadedModels = new Set<string>();
 
 			// Ollama models from backend API
-			(await reloadOllamaChatModels())
-				.map((modelName) => {
-					return `ollama:${modelName}`;
-				})
-				.forEach((fullModelName) => {
-					loadedModels.add(fullModelName);
-				});
+			(await reloadOllamaChatModels()).forEach((fullModelName) => {
+				loadedModels.add(fullModelName);
+			});
 
 			// OpenAI chat models from backend API
-			(await reloadOpenAIChatModels())
-				.map((modelName) => {
-					return `openai:${modelName}`;
-				})
-				.forEach((fullModelName) => {
-					loadedModels.add(fullModelName);
-				});
+			(await reloadOpenAIChatModels()).forEach((fullModelName) => {
+				loadedModels.add(fullModelName);
+			});
 
 			chatModels = _([...loadedModels])
 				.filter((modelName: string) => {
@@ -240,6 +233,9 @@
 					},
 					(modelName: string) => {
 						return modelName.startsWith('ollama:llama') ? 0 : 1;
+					},
+					(modelName: string) => {
+						return modelName.toLowerCase().trim();
 					}
 				)
 				.map((modelName: string) => {
@@ -502,13 +498,13 @@
 		}
 	}
 
-	function updateSelectedChatModelInStorage() {
+	function updateSelectedChatModelInStorage(newValue: string) {
 		if (typeof window === 'undefined') {
 			return;
 		}
 
-		if (selectedChatModel) {
-			localStorage.setItem(selectedChatModelStorageKey, JSON.stringify(selectedChatModel));
+		if (newValue) {
+			localStorage.setItem(selectedChatModelStorageKey, JSON.stringify(newValue));
 		} else {
 			localStorage.removeItem(selectedChatModelStorageKey);
 		}
@@ -584,6 +580,10 @@
 	}
 
 	onMount(() => {
+		if (typeof document === 'undefined') {
+			return;
+		}
+
 		reloadChunkOverlapFromStorage();
 		reloadChunkSizeFromStorage();
 		reloadMaxTokensFromStorage();
@@ -599,6 +599,9 @@
 		tab.querySelectorAll<HTMLDivElement>('div[role="tabpanel"]').forEach((div) => {
 			div.style.backgroundColor = 'transparent';
 			div.style.paddingTop = '0px';
+		});
+		tab.querySelectorAll<HTMLButtonElement>('button[role="tab"]').forEach((div) => {
+			div.style.cursor = 'pointer';
 		});
 	});
 
@@ -638,7 +641,7 @@
 		>
 			<div class="flex w-full gap-2">
 				<Input
-					disabled={isAddingCollection}
+					disabled={isAddingCollection || isSubmittingQuestion}
 					bind:value={newCollectionName}
 					placeholder="New collection name ..."
 					onKeydown={(e) => {
@@ -655,7 +658,8 @@
 					disabled={isAddingCollection ||
 						isLoadingCollections ||
 						isDeletingCollection ||
-						newCollectionName.trim() === ''}
+						newCollectionName.trim() === '' ||
+						isSubmittingQuestion}
 					onclick={addCollection}
 				>
 					<FolderPlusSolid class="h-4 w-4" />
@@ -688,14 +692,16 @@
 						<TableBody>
 							{#each collections as collection}
 								<TableBodyRow>
-									<TableBodyCell class="cursor-pointer">
+									<TableBodyCell class={`${isSubmittingQuestion ? '' : 'cursor-pointer'}`}>
 										<!-- svelte-ignore a11y_click_events_have_key_events -->
 										<!-- svelte-ignore a11y_no_static_element_interactions -->
 										<div
 											class={`flex w-full ${selectedCollectionIds.includes(collection.id) ? 'font-medium text-white' : 'italic'}`}
-											onclick={(e) => {
-												toggleSelectedCollectionId(collection.id);
-											}}
+											onclick={isSubmittingQuestion
+												? undefined
+												: (e) => {
+														toggleSelectedCollectionId(collection.id);
+													}}
 										>
 											{#if selectedCollectionIds.includes(collection.id)}
 												<div class="pr-2"><CheckCircleOutline /></div>
@@ -713,7 +719,8 @@
 											color="blue"
 											disabled={isAddingCollection ||
 												isDeletingCollection ||
-												isUploadingCollectionDocuments}
+												isUploadingCollectionDocuments ||
+												isSubmittingQuestion}
 											onclick={() => {
 												collectionToEdit = collection;
 											}}><EditSolid class="h-3 w-3" /></Button
@@ -724,7 +731,8 @@
 											color="red"
 											disabled={isAddingCollection ||
 												isDeletingCollection ||
-												isUploadingCollectionDocuments}
+												isUploadingCollectionDocuments ||
+												isSubmittingQuestion}
 											onclick={() => {
 												collectionToDelete = collection;
 											}}><TrashBinSolid class="h-3 w-3" /></Button
@@ -753,13 +761,12 @@
 						<span class="text-white">Chat Model</span>
 						<Select
 							class="mt-2"
+							selectClass="cursor-pointer"
 							items={chatModels}
-							disabled={isLoadingChatModels}
+							disabled={isLoadingChatModels || isSubmittingQuestion}
 							value={selectedChatModel}
 							onchange={(e: any) => {
-								selectedChatModel = e.target.value;
-
-								updateSelectedChatModelInStorage();
+								updateSelectedChatModelInStorage((selectedChatModel = e.target.value));
 							}}
 						/>
 					</Label>
@@ -778,8 +785,9 @@
 							max={128000}
 							step={100}
 							onchange={(e: any) => {
-								updateMaxTokensInStorage(parseInt(String(e.target.value)));
+								updateMaxTokensInStorage((maxTokens = parseInt(String(e.target.value))));
 							}}
+							disabled={isSubmittingQuestion}
 						/>
 					</Label>
 				</div>
@@ -795,8 +803,11 @@
 							max={2}
 							step={0.1}
 							onchange={(e: any) => {
-								updateTemperatureInStorage(parseFloat(String(e.target.value).split(',').join('.')));
+								updateTemperatureInStorage(
+									(temperature = parseFloat(String(e.target.value).split(',').join('.')))
+								);
 							}}
+							disabled={isSubmittingQuestion}
 						/>
 					</Label>
 				</div>
@@ -813,8 +824,11 @@
 							min={1}
 							step={1}
 							onchange={(e: any) => {
-								updateNumberOfVectorDocsInStorage(parseInt(String(e.target.value)));
+								updateNumberOfVectorDocsInStorage(
+									(numberOfVectorDocs = parseInt(String(e.target.value)))
+								);
 							}}
+							disabled={isSubmittingQuestion}
 						/>
 					</Label>
 				</div>
@@ -908,7 +922,7 @@
 					min={1}
 					step={100}
 					onchange={(e: any) => {
-						updateChunkSizeInStorage(parseInt(String(e.target.value)));
+						updateChunkSizeInStorage((chunkSize = parseInt(String(e.target.value))));
 					}}
 				/>
 			</Label>

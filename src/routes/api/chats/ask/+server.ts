@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 // MIT License
 //
 // Copyright (c) 2025 Marcel Joachim Kloubert (https://marcel.coffee)
@@ -31,6 +32,8 @@ import { OllamaEmbeddings } from '$lib/types/classes/ollama-embeddings';
 import type { DocumentInterface } from '@langchain/core/documents';
 import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 import { chromaBaseUrl, databaseName, tenantName } from '../../collections/constants';
+import { createLogger } from '$lib/types/classes/logger';
+import { questionPrefix } from '$lib/constants';
 
 const askAISchema = z.object({
 	collections: z.array(z.string().trim().min(1)).min(1),
@@ -43,6 +46,8 @@ const askAISchema = z.object({
 });
 
 export const POST: RequestHandler = async ({ request }) => {
+	const l = createLogger('POST.ask-ai');
+
 	const OPENAI_API_KEY = process.env.OPENAI_API_KEY?.trim();
 	const OLLAMA_BASE_URL =
 		process.env.TGF_OLLAMA_BASE_URL?.trim() || 'http://host.docker.internal:11434';
@@ -57,6 +62,11 @@ export const POST: RequestHandler = async ({ request }) => {
 	const provider = body.model.split(':')[0].toLowerCase().trim();
 	const temperature = body.temperature ?? 0.3;
 
+	l('Max tokens:', maxTokens);
+	l('Number of vector docs:', numberOfVectorDocs);
+	l('Provider:', provider);
+	l('Temperature:', temperature);
+
 	let client: AiClientBase;
 	if (provider === 'ollama') {
 		client = new OllamaAIClient(modelName);
@@ -70,6 +80,8 @@ export const POST: RequestHandler = async ({ request }) => {
 		throw new Error(`AI provider '${provider}' not supported`);
 	}
 
+	l('Provider / model:', client.provider, '/', client.model);
+
 	const conversation: AiQueryItem[] = body.conversation.map((item) => {
 		return {
 			...item
@@ -80,6 +92,8 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	const hasSystemMessage = conversation.some((item) => item.role === 'system');
 	if (!hasSystemMessage) {
+		l('Setting up system message ...');
+
 		const systemContent = `Use the following context to answer the question (both are submitted as serialied JSON strings).
 Use same language for each answer.`;
 
@@ -89,11 +103,14 @@ Use same language for each answer.`;
 		});
 	}
 
+	l(`Embedding query '${body.query}' ...`);
 	const queryEmbedding = await embeddings.embedQuery(body.query);
 
 	const allDocuments: DocumentInterface<Record<string, any>>[] = [];
 
 	for (const collectionName of body.collections) {
+		l(`Querying collection '${collectionName}' ...`);
+
 		const queryData = {
 			query_embeddings: [[...queryEmbedding]],
 			n_results: numberOfVectorDocs
@@ -136,12 +153,21 @@ Use same language for each answer.`;
 			});
 		}
 
+		l('Found', ids.length, `relevant documents in collection ${collectionName}:`, ids.join());
+
 		allDocuments.push(...relevantDocsInThisCollection);
 	}
 
 	const memoryStore = await MemoryVectorStore.fromDocuments(allDocuments, embeddings);
 
 	const relevantDocs = await memoryStore.similaritySearch(body.query, numberOfVectorDocs);
+
+	l(
+		'Found',
+		relevantDocs.length,
+		'relevant documents for all collections:',
+		relevantDocs.map((rd) => rd.id).join()
+	);
 
 	const context = relevantDocs
 		.map((doc) => doc.pageContent)
@@ -150,13 +176,20 @@ Use same language for each answer.`;
 
 	const userContent = `### CONTEXT: ${JSON.stringify(context)}
 
-### QUESTION: ${JSON.stringify(body.query)}
+${questionPrefix}${JSON.stringify(body.query)}
 
 Answer:`;
+
+	l('Build user message with AI content of length', userContent.length);
 
 	conversation.push({
 		role: 'user',
 		content: userContent
+	});
+
+	l('Sending AI conversation:');
+	conversation.forEach(({ role, content }, index) => {
+		l(`AI conversation #${index + 1}: role=${role}, content.length=${content.length}`);
 	});
 
 	const chatResult = await client.query(conversation, {
@@ -164,12 +197,15 @@ Answer:`;
 		temperature
 	});
 
+	const aiContent = chatResult.content;
+	l('Got answer from', modelName, 'with a length of', aiContent.length);
+
 	return Response.json(
 		{
 			conversation: [
 				...conversation,
 				{
-					content: chatResult.content,
+					content: aiContent,
 					role: 'assistant'
 				}
 			] satisfies AIMessageItem[]

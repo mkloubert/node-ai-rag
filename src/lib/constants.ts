@@ -20,41 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import { filterModels } from '$lib';
-import type { RequestHandler } from '@sveltejs/kit';
-import { json } from '@sveltejs/kit';
-
-export const GET: RequestHandler = async () => {
-	const OLLAMA_BASE_URL =
-		process.env.OLLAMA_BASE_URL?.trim() || 'http://host.docker.internal:11434';
-
-	const models = new Set<string>();
-
-	try {
-		const url = `${OLLAMA_BASE_URL}/api/tags`;
-
-		const response = await fetch(url);
-
-		if (response.status !== 200) {
-			const text = await response.text();
-
-			throw new Error(`Unexpected response ${response.status}: ${text}`);
-		}
-
-		const r = await response.json();
-
-		r.models
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			.forEach(({ name }: any) => {
-				models.add(String(name));
-			});
-	} catch (error) {
-		console.log('[ERROR]:', 'Could not fetch Ollama model list:', error);
-	}
-
-	const modelsWithPrefixes = [...models].map((model) => {
-		return `ollama:${model}`;
-	});
-
-	return json({ models: filterModels(modelsWithPrefixes, process.env.TGF_CHAT_MODEL_FILTER) });
-};
+/**
+ * Question prefix for user messages in AI conversations.
+ */
+export const questionPrefix = '### QUESTION: ';

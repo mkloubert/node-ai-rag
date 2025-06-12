@@ -21,14 +21,14 @@
 // SOFTWARE.
 
 /**
- * Loads a file as a URI.
+ * Loads a file as a string.
  *
- * @param {File} file The file to load.
+ * @param {Blob} blob The file/blob to load.
  *
  * @returns {Promise<string>} A promise that resolves with the URI of the file.
  */
-export function loadFileAsURI(file: File) {
-	return new Promise<string>((resolve, reject) => {
+export function loadFileAsString(blob: Blob): Promise<string> {
+	return new Promise((resolve, reject) => {
 		const reader = new FileReader();
 
 		reader.onerror = (err) => reject(err);
@@ -37,6 +37,27 @@ export function loadFileAsURI(file: File) {
 			resolve((e.target as any).result);
 		};
 
-		reader.readAsDataURL(file);
+		reader.readAsText(blob);
+	});
+}
+
+/**
+ * Loads a file as a URI.
+ *
+ * @param {Blob} blob The file/blob to load.
+ *
+ * @returns {Promise<string>} A promise that resolves with the URI of the file.
+ */
+export function loadFileAsURI(blob: Blob): Promise<string> {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+
+		reader.onerror = (err) => reject(err);
+		reader.onload = function (e) {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			resolve((e.target as any).result);
+		};
+
+		reader.readAsDataURL(blob);
 	});
 }

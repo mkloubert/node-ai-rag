@@ -20,6 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+import { filterModels } from '$lib';
 import type { RequestHandler } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
 
@@ -51,7 +52,7 @@ export const GET: RequestHandler = async () => {
 		r.data
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			.filter(({ object, owned_by }: any) => {
-				return object === 'model' && owned_by === 'openai';
+				return object === 'model' && (owned_by === 'openai' || owned_by === 'system');
 			})
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			.forEach(({ id }: any) => {
@@ -61,5 +62,9 @@ export const GET: RequestHandler = async () => {
 		console.log('[ERROR]:', 'Could not fetch OpenAI model list:', error);
 	}
 
-	return json({ models: [...models] });
+	const modelsWithPrefixes = [...models].map((model) => {
+		return `openai:${model}`;
+	});
+
+	return json({ models: filterModels(modelsWithPrefixes, process.env.TGF_CHAT_MODEL_FILTER) });
 };

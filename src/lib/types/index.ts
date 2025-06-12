@@ -22,21 +22,52 @@
 
 import { z } from 'zod';
 
+/**
+ * Schema for an item in an AI conversation.
+ */
 export const aiMessageItemSchema = z.object({
 	content: z.string(),
-	role: z.enum(["assistant", "system", "user"]),
+	role: z.enum(['assistant', 'system', 'user'])
 });
 
+/**
+ * Schema for a document (item) that should be written to
+ */
 export const collectionDocumentItemSchema = z.object({
 	data: z.string().trim().base64(),
 	name: z.string().trim().min(1)
 });
 
-export type CollectionDocumentItem = z.infer<typeof collectionDocumentItemSchema>;
+/**
+ * A schema for an (AI) conversaion.
+ */
+export const conversationSchema = z.array(aiMessageItemSchema);
 
+/**
+ * Type of `aiMessageItemSchema`.
+ */
 export type AIMessageItem = z.infer<typeof aiMessageItemSchema>;
 
+/**
+ * Type of `collectionDocumentItemSchema`.
+ */
+export type CollectionDocumentItem = z.infer<typeof collectionDocumentItemSchema>;
+
+/**
+ * Type of `conversationSchema`.
+ */
+export type Conversation = z.infer<typeof conversationSchema>;
+
+/**
+ * A vector collection.
+ */
 export interface VectorCollection {
+	/**
+	 * The ID.
+	 */
 	id: string;
+	/**
+	 * The name.
+	 */
 	name: string;
 }

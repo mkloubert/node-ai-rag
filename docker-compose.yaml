@@ -20,15 +20,18 @@ services:
     depends_on:
       chromadb:
         condition: service_healthy
+    env_file:
+      - .env
+      - .env.local
     entrypoint: ['/bin/sh', '-c']
     command: >
       "
       echo 'Wait for Chroma API ...';
       sleep 3;
       echo 'Creating initial tenant ...';
-      curl -X POST http://chromadb:8000/api/v2/tenants -H 'Content-Type: application/json' -d '{\"name\": \"default-tenant\"}';
+      curl -X POST http://chromadb:8000/api/v2/tenants -H 'Content-Type: application/json' -d '{\"name\": \"'\"$TGF_TENANT_NAME\"'\"}';
       echo 'Creating initial database ...';
-      curl -X POST http://chromadb:8000/api/v2/tenants/default-tenant/databases -H 'Content-Type: application/json' -d '{\"name\": \"default-database\"}';
+      curl -X POST http://chromadb:8000/api/v2/tenants/$TGF_TENANT_NAME/databases -H 'Content-Type: application/json' -d '{\"name\": \"'\"$TGF_DATABASE_NAME\"'\"}';
       echo 'Success!';
       "
     restart: 'no'

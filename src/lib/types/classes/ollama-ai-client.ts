@@ -31,13 +31,18 @@ import {
  * An Ollama implementation of `AiClientBase`.
  */
 export class OllamaAIClient extends AiClientBase {
+	readonly #baseUrl: string;
+
 	/**
 	 * Initializes a new instance of that class.
 	 *
 	 * @param {string} [model="llama4"] The custom model to use.
+	 * @param {string} [baseUrl="http://host.docker.internal:11434"] The custom base URL to use.
 	 */
-	constructor(model = 'llama4') {
+	constructor(model = 'llama4', baseUrl = 'http://host.docker.internal:11434') {
 		super(model);
+
+		this.#baseUrl = baseUrl;
 	}
 
 	/**
@@ -62,7 +67,7 @@ export class OllamaAIClient extends AiClientBase {
 			};
 		});
 
-		const response = await fetch('http://localhost:11434/api/chat', {
+		const response = await fetch(`${this.#baseUrl}/api/chat`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'

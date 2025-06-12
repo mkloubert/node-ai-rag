@@ -30,6 +30,7 @@
 
 	let chatModel = '';
 	let collections: VectorCollection[] = [];
+	let isSubmittingQuestion = false;
 	let maxTokens = 10000;
 	let numberOfVectorDocs = 1000;
 	let temperature = 0.3;
@@ -37,10 +38,18 @@
 
 <div class="flex h-screen flex-col bg-gray-900 text-gray-100 md:flex-row">
 	<!-- Chat Section -->
-	<ChatArea {chatModel} {collections} {maxTokens} {numberOfVectorDocs} {temperature} />
+	<ChatArea
+		{chatModel}
+		{collections}
+		{maxTokens}
+		{numberOfVectorDocs}
+		{temperature}
+		onIsSubmittingQuestionChange={(value) => (isSubmittingQuestion = value)}
+	/>
 
 	<!-- Settings Section -->
 	<SettingsArea
+		{isSubmittingQuestion}
 		onChatModelChange={(value) => (chatModel = value)}
 		onCollectionsChange={(items) => (collections = [...items])}
 		onMaxTokensChange={(value) => (maxTokens = value)}
