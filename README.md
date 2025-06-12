@@ -31,26 +31,26 @@ A [Filtrex expression](https://www.npmjs.com/package/filtrex) used to filter mod
 **Example:**
 
 ```
-startsWith(model, "ollama:llama3.1") or 
-regex(model, "^(openai:gpt-4)([^-]*)$") or 
+startsWith(model, "ollama:llama3.1") or
+regex(model, "^(openai:gpt-4)([^-]*)$") or
 regex(model, "^(openai:gpt-4)([^-]*)((-mini)|(-nano))$")
 ```
 
 **Constants:**
 
-| Name    | Description                                      | Example                                                          |
-| ------- | ------------------------------------------------ | ---------------------------------------------------------------- |
-| `model` | The name of the model being evaluated.           | `model == "openai:gpt-4o-mini"` or `model == "ollama:llama3.1:8b"` |
+| Name    | Description                            | Example                                                          |
+| ------- | -------------------------------------- | ---------------------------------------------------------------- |
+| `model` | The name of the model being evaluated. | `model == "openai:gpt-4o-mini" or model == "ollama:llama3.1:8b"` |
 
 **Functions:**
 
-| Function                                                   | Description                                                                           | Example                                                      |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `endsWith(value, suffix)`                                 | Returns true if the value ends with the specified suffix.                            | `endsWith(model, "-mini")`                                 |
-| `log(...args)`                                            | Logs one or more values; always returns true.                                        | `log(model) and startsWith(model, "ollama:")`              |
-| `regex(value, expr, flags = 'gmi')`                       | Returns true if the value matches the given regular expression.                      | `regex(model, "^(openai:gpt-4)([^-]*)((-mini))$")`         |
-| `startsWith(value, prefix)`                               | Returns true if the value starts with the specified prefix.                          | `startsWith(model, "ollama:")`                             |
-| `str(value)`                                               | Converts the input to a string, returns an empty string for `null` or `undefined`. | `str(4) == "4"`, `str(null) == ""`, `str(undefined) == ""` |
+| Function                            | Description                                                                        | Example                                                                     |
+| ----------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `endsWith(value, suffix)`           | Returns true if the value ends with the specified suffix.                          | `endsWith(model, "-mini")`                                                  |
+| `log(...args)`                      | Logs one or more values; always returns true.                                      | `log(model, startsWith(model, "ollama:")) and startsWith(model, "ollama:")` |
+| `regex(value, expr, flags = 'gmi')` | Returns true if the value matches the given regular expression.                    | `regex(model, "^(openai:gpt-4)([^-]*)((-mini))$")`                          |
+| `startsWith(value, prefix)`         | Returns true if the value starts with the specified prefix.                        | `startsWith(model, "ollama:")`                                              |
+| `str(value)`                        | Converts the input to a string, returns an empty string for `null` or `undefined`. | `str(4) == "4" and str(null) == "" and str(undefined) == ""`                |
 
 #### `TGF_DATABASE_NAME`
 
